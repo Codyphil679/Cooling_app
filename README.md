@@ -21,7 +21,13 @@ The app is a set of static files in `public/`. Host them anywhere that serves HT
 
 ### 1. Host it (free, one-time setup)
 
-This repo is private. GitHub Pages needs a paid plan for private repos, so use one of these free hosts. Both redeploy automatically every time `main` changes.
+**GitHub Pages** (when the repo is public)
+1. Make the repo public: **Settings → General → Danger Zone → Change visibility**.
+2. Go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+3. Go to **Actions → Deploy to GitHub Pages → Run workflow**.
+4. The app is at https://codyphil679.github.io/Cooling_app/. It redeploys every time files in `public/` change on `main`.
+
+If the repo stays private, GitHub Pages needs a paid plan. Use one of these free hosts instead; both redeploy automatically every time `main` changes.
 
 **Netlify**
 1. Sign in at https://app.netlify.com with your GitHub account.
