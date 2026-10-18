@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cooling Calc</title>
+  <meta name="description" content="Cooling section calculator: product cooling load, single roll and zone performance.">
+  <meta name="theme-color" content="#0f4c81">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Cooling Calc</h1>
+    <div class="seg" role="group" aria-label="Units">
+      <button type="button" data-units="metric">Metric</button>
+      <button type="button" data-units="imperial">Imperial</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- PRODUCT -->
+    <section id="tab-product" class="tab">
+      <div class="card">
+        <h2>Product</h2>
+        <label class="field">
+          <span class="lbl">Material</span>
+          <select data-key="product.material" id="material"></select>
+        </label>
+        <div class="grid" data-fields="product"></div>
+        <details class="more">
+          <summary>Material properties</summary>
+          <div class="grid" data-fields="material"></div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2>Temperatures</h2>
+        <div class="grid" data-fields="product-temps"></div>
+      </div>
+
+      <div class="card result">
+        <h2>Cooling required</h2>
+        <p class="big" data-out="product.load"></p>
+        <p class="sub" data-out="product.loadAlt"></p>
+        <dl class="stats">
+          <div><dt>Product throughput</dt><dd data-out="product.massRate"></dd></div>
+        </dl>
+        <div class="grid" data-fields="water-rise"></div>
+        <dl class="stats">
+          <div><dt>Cooling water needed</dt><dd data-out="product.waterFlow"></dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- SINGLE ROLL -->
+    <section id="tab-roll" class="tab" hidden>
+      <p class="using" data-out="usingProduct"></p>
+
+      <div class="card">
+        <h2>Heat removed: water readings</h2>
+        <p class="hint">Uses the water flow and the temperatures going in and out of the roll.</p>
+        <div class="grid" data-fields="water"></div>
+        <div class="result inline">
+          <p class="big" data-out="roll.waterHeat"></p>
+          <p class="sub" data-out="roll.waterHeatAlt"></p>
+          <p class="sub" data-out="roll.waterShare"></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Predict product cooling</h2>
+        <p class="hint">Estimates how much the product cools while it is wrapped on this roll.</p>
+        <div class="grid" data-fields="roll"></div>
+        <div class="result inline">
+          <dl class="stats">
+            <div><dt>Product temp out</dt><dd data-out="roll.tOut"></dd></div>
+            <div><dt>Heat removed</dt><dd data-out="roll.heat"></dd></div>
+            <div><dt>Contact time</dt><dd data-out="roll.time"></dd></div>
+            <div><dt>Roll effectiveness</dt><dd data-out="roll.effectiveness"></dd></div>
+            <div><dt>Water temp rise (at the flow above)</dt><dd data-out="roll.waterRise"></dd></div>
+          </dl>
+          <p class="warn" data-out="roll.warning" hidden></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Calibrate U</h2>
+        <p class="hint">Measure the product temperature right after this roll. The app works out the U that
+          matches it, so the predictions match your line.</p>
+        <div class="grid" data-fields="calib"></div>
+        <dl class="stats">
+          <div><dt>Calibrated U</dt><dd data-out="roll.calibratedHtc"></dd></div>
+        </dl>
+        <div class="actions">
+          <button type="button" class="btn" data-action="use-u-roll">Use for this roll</button>
+          <button type="button" class="btn" data-action="use-u-zone">Use for all zone rolls</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZONE -->
+    <section id="tab-zone" class="tab" hidden>
+      <p class="using" data-out="usingProduct"></p>
+
+      <div class="card">
+        <h2>Zone</h2>
+        <div class="grid" data-fields="zone"></div>
+      </div>
+
+      <div id="zone-rolls"></div>
+      <button type="button" class="btn wide" data-action="add-roll">+ Add roll</button>
+
+      <div class="card result">
+        <h2>Zone result</h2>
+        <p class="big" data-out="zone.tOut"></p>
+        <p class="status" data-out="zone.status"></p>
+        <dl class="stats">
+          <div><dt>Total heat removed</dt><dd data-out="zone.totalHeat"></dd></div>
+          <div><dt>Needed to reach target</dt><dd data-out="zone.required"></dd></div>
+          <div><dt>Rolls needed for target</dt><dd data-out="zone.rollsNeeded"></dd></div>
+        </dl>
+        <div class="table-wrap">
+          <table class="rolls-table">
+            <thead>
+              <tr><th>Roll</th><th>Temp out</th><th>Heat</th><th>Share</th><th>Effect.</th></tr>
+            </thead>
+            <tbody id="zone-table"></tbody>
+          </table>
+        </div>
+        <p class="warn" data-out="zone.warning" hidden></p>
+      </div>
+    </section>
+
+    <!-- HELP -->
+    <section id="tab-help" class="tab" hidden>
+      <div class="card">
+        <h2>Install on your phone</h2>
+        <button type="button" class="btn wide" id="install-btn" hidden>Install app</button>
+        <p>In Chrome on Android, open this page and tap <b>⋮ → Add to Home screen</b> (or <b>Install app</b>).
+          The app then opens from its own icon and works without signal.</p>
+      </div>
+
+      <div class="card">
+        <h2>How the numbers are worked out</h2>
+        <h3>Cooling required</h3>
+        <p class="formula">mass flow = density × thickness × width × speed<br>
+          heat = mass flow × specific heat × (temp in − temp out)</p>
+        <h3>Water side</h3>
+        <p class="formula">heat = water flow × 998 kg/m³ × 4182 J/kg·K × (water out − water in)</p>
+        <h3>Product on a roll</h3>
+        <p class="formula">contact time = π × diameter × (wrap ÷ 360) ÷ speed<br>
+          temp out = roll temp + (temp in − roll temp) × e<sup>−U × time ÷ (density × cp × thickness)</sup></p>
+        <p>Rolls in a zone run one after another: each roll’s temp out is the next roll’s temp in.</p>
+        <p><b>Roll effectiveness</b> is how much of the possible cooling the roll achieved:
+          (temp in − temp out) ÷ (temp in − roll temp). 100% means the product left at the roll temperature.</p>
+      </div>
+
+      <div class="card">
+        <h2>Assumptions</h2>
+        <ul>
+          <li>The product is thin enough that its temperature is even through its thickness. For thick or
+            plastic products the inside lags the surface, so predictions are optimistic. Calibrate U to correct for it.</li>
+          <li><b>U</b> (heat transfer coefficient) covers contact between the product and the roll. Typical values
+            are 100–1500 W/m²·K and depend on contact pressure, surface finish and air entrainment.
+            Calibrate it from a measured temperature for real numbers.</li>
+          <li>Cooling in the air gaps between rolls is not counted.</li>
+          <li>Material properties are typical room-temperature values. Edit them under “Material properties”.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Data</h2>
+        <p>Your inputs are saved on this phone only.</p>
+        <button type="button" class="btn" data-action="reset">Reset all inputs</button>
+        <p class="hint" id="version"></p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Sections">
+    <button type="button" data-tab="product">Product</button>
+    <button type="button" data-tab="roll">Single roll</button>
+    <button type="button" data-tab="zone">Zone</button>
+    <button type="button" data-tab="help">Help</button>
+  </nav>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "cooling-calc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Installable web app for cooling section calculations: product cooling load, single roll and zone performance.",
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes serve@14 public",
+    "test": "node --test"
+  }
+}
